@@ -1,16 +1,18 @@
-import os
-from typing import Optional, Union, List
-from datetime import datetime
+
 import sqlalchemy as sa
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask import url_for, current_app
 from flask_login import UserMixin
-from flask import url_for
+from werkzeug.security import check_password_hash, generate_password_hash
+from sqlalchemy.dialects.mysql import YEAR
+import markdown
+import bleach
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, DateTime, Text, Integer, MetaData
-from enum import Enum
-
+from sqlalchemy import MetaData
+from datetime import date
+from user_policy import UsersPolicy
+# from users_policy import UsersPolicy
 
 class Base(DeclarativeBase):
   metadata = MetaData(naming_convention={
@@ -34,6 +36,25 @@ class User(db.Model, UserMixin):
     last_name = db.Column(db.String(256), nullable=False)
     first_name = db.Column(db.String(256), nullable=False)
     middle_name = db.Column(db.String(256))
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
+
+    role = db.relationship("Role")
+
+    def is_admin(self):
+        return self.role_id == current_app.config['ADMIN_ROLE_ID']
+
+    def is_moderator(self):
+        return self.role_id == current_app.config['MODERATOR_ROLE_ID']
+
+    def is_user(self):
+        return self.role_id == current_app.config['USER_ROLE_ID']
+
+    def can(self, action, record=None):
+        users_policy = UsersPolicy(record)
+        method = getattr(users_policy, action, None)
+        if method:
+            return method()
+        return False
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -50,3 +71,83 @@ class User(db.Model, UserMixin):
     
     def __repr__(self):
         return "<User %r>" % self.login
+    
+
+class Role(db.Model):
+
+    __tablename__ = "roles"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(256), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+
+    def __repr__(self):
+        return "<Role %r>" % self.login
+    
+books_genres = db.Table(
+    "books_genres",
+    db.Column("book_id", db.Integer, db.ForeignKey("books.id")),
+    db.Column("genre_id", db.Integer, db.ForeignKey("genres.id")),
+)
+
+class Book(db.Model):
+
+    __tablename__ = "books"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(256), nullable=False)
+    short_desc = db.Column(db.Text, nullable=False)
+    year_release = db.Column(db.Integer, nullable=False)
+    publisher = db.Column(db.String(256), nullable=False)
+    author = db.Column(db.String(256), nullable=False)
+    pages_volume = db.Column(db.Integer, nullable=False)
+    image_id = db.Column(db.String(256), db.ForeignKey(
+        "images.id"), nullable=False)
+    rating_sum = db.Column(db.Integer, nullable=False, default=0)
+    rating_num = db.Column(db.Integer, nullable=False, default=0)
+    genres = db.relationship(
+        "Genre", secondary=books_genres, backref="books")
+    image = db.relationship("Image")
+
+    def prepare_to_save(self):
+        self.short_desc = bleach.clean(self.short_desc)
+
+    def prepare_to_html(self):
+        self.short_desc = markdown.markdown(self.short_desc)
+
+    @property
+    def rating(self):
+        if self.rating_num > 0:
+            return self.rating_sum / self.rating_num
+        return 0
+
+    def __repr__(self):
+        return "<Book %r>" % self.name
+    
+
+class Genre(db.Model):
+
+    __tablename__ = "genres"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(256), unique=True, nullable=False)
+
+    def __repr__(self):
+        return "<Genre %r>" % self.name
+    
+
+class Image(db.Model):
+
+    __tablename__ = "images"
+
+    id = db.Column(db.String(256), primary_key=True)
+    file_name = db.Column(db.String(256), nullable=False)
+    mime_type = db.Column(db.String(256), nullable=False)
+    md5_hash = db.Column(db.String(256), nullable=False, unique=True)
+
+    @property
+    def url(self):
+        return url_for("image", image_id=self.id)
+
+    def __repr__(self):
+        return "<Image %r>" % self.file_name

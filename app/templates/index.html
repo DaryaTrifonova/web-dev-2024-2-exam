@@ -1,18 +1,69 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="h-100 text-center d-flex p-3 bg-light">
+
+<div class="h-100 text-center d-flex p-3 bg-light mt-5">
     <div class="m-auto">
+    
         <h1 class="title mb-5 font-weight-bold">Электронная библиотека</h1>
         
         <div class="container">
             <p class="description w-75 mb-5 px-3 mx-auto">
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maiores eius quisquam harum eveniet quidem ratione deserunt itaque. Corrupti ullam quo delectus ratione, totam nisi perspiciatis suscipit cupiditate? Assumenda, accusamus ullam?
+                Добро пожаловать в нашу электронную библиотеку! Здесь вы найдете тысячи книг на любой вкус: 
+                от классической литературы до современных бестселлеров. 
+                Удобный интерфейс позволяет легко искать и скачивать книги в различных форматах. 
+                Наслаждайтесь чтением в любое время и в любом месте!
             </p>
 
-            <h2 class="title mb-5 font-weight-bold">Каталог книг</h2>
-            
         </div>
+
+        <h2 class="title mb-5 font-weight-bold">Каталог книг</h2>
+        
+        <table class="table">
+            <tr>
+                <th>Обложка книги</th>
+                <th>Название</th>
+                <th>Жанр(ы)</th>
+                <th>Год</th>
+                <th>Рейтинг</th>
+                <th>Количество рецензий</th>
+                <th>Действия</th>
+            </tr>
+            {% for book in books %}
+            <tr>
+                <td style="background-image: url({{ url_for('image', image_id=book.image_id) }});vertical-align: middle; background-size: contain; background-repeat: no-repeat; background-position: center; height: 150px;"> </td>
+                <td style="vertical-align: middle;"> {{ book.name }}</td>
+                <td style="vertical-align: middle;"> 
+                    {% for genre in book.genres %}
+                    {{ genre.name }}
+                    {% endfor %}
+                </td>
+                <td style="vertical-align: middle;"> {{ book.year_release }}</td>
+                <td style="vertical-align: middle;"> <span>★</span> <span>{{ "%.2f" | format(book.rating) }}</span> </td>
+                <td style="vertical-align: middle;"> {{ book.rating_num }} </td>
+                <td style="vertical-align: middle;">
+                    <div class="btn-group" role="group">
+                        <a class="btn btn-secondary" href="#">Просмотр</a>
+                        {% if current_user.is_authenticated %}
+                        {% if current_user.can('edit') %}
+                        <a class="btn btn-primary" href="#">Редактировать</a>
+                        {% endif %}
+                        {% if current_user.can('delete') %}
+                        <button class="btn btn-danger" data-bs-toggle="modal" data-url="#" data-bs-target="#deleteUser">Удалить</button>
+                        {% endif %}
+                        {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% if current_user.is_authenticated and current_user.can('create') %}
+        <div class="text-center mt-5 mb-5">
+            <a class="btn btn-lg btn-dark" href="{{ url_for('new') }}">Добавить книгу</a>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+
+
 {% endblock %}
