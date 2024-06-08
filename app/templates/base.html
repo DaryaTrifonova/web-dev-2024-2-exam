@@ -23,14 +23,14 @@
                     </a>
                 </div>
                     {% if current_user.is_authenticated %}
-                    <div class="dropdown d-flex" style="width: 200px;">
+                    <div class="dropdown d-flex me-5" style="width: 200px;">
                         <div class="profile ms-auto" title="sdfsdf" id="dropdownMenuButton" data-bs-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                             <img class="img-fluid rounded-circle cursor-pointer"
                                 src="{{ url_for('static', filename='images/default-profile-picture-300x300.jpeg') }}" alt="profile-pic">
                         </div>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <p class="dropdown-item">NameUser</p>
+                            <p class="dropdown-item">{{ current_user.full_name }}</p>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Выйти</a>
                         </div>
