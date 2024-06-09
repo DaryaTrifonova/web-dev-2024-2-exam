@@ -10,7 +10,7 @@ import bleach
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import MetaData
-from datetime import date
+from datetime import datetime
 from user_policy import UsersPolicy
 # from users_policy import UsersPolicy
 
@@ -39,6 +39,7 @@ class User(db.Model, UserMixin):
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
 
     role = db.relationship("Role")
+    reviews = db.relationship("Review")
 
     def is_admin(self):
         return self.role_id == current_app.config['ADMIN_ROLE_ID']
@@ -108,6 +109,7 @@ class Book(db.Model):
     genres = db.relationship(
         "Genre", secondary=books_genres, backref="books")
     image = db.relationship("Image")
+    reviews = db.relationship("Review")
 
     def prepare_to_save(self):
         self.short_desc = bleach.clean(self.short_desc)
@@ -151,3 +153,30 @@ class Image(db.Model):
 
     def __repr__(self):
         return "<Image %r>" % self.file_name
+
+
+class Review(db.Model):
+    __tablename__ = 'reviews'
+
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    book_id = db.Column(db.Integer, db.ForeignKey("books.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    book = db.relationship('Book', back_populates='reviews')
+    user = db.relationship('User', back_populates='reviews')
+
+    def prepare_to_save(self):
+        self.text = bleach.clean(self.text)
+
+    def prepare_to_html(self):
+        self.text = markdown.markdown(self.text)
+
+    def __repr__(self):
+        return f'<Review {self.rating} by User {self.user_id}>'
+
+    @property
+    def rating_name(self):
+        return self.rating.name

@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, Flask, send_from_directory,abort
 from auth import bp as auth_bp, init_login_manager, check_rights
 from flask_migrate import Migrate
-from models import db, Book, Genre, Image
-from flask_login import login_required
+from models import db, Book, Genre, Image, Review
+from flask_login import login_required, current_user
 from tools import ImageSaver, extract_params
 import os
+from reviews import bp as reviews_bp
 
 
 app = Flask(__name__)
@@ -18,6 +19,7 @@ migrate = Migrate(app, db)
 init_login_manager(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(reviews_bp)
 
 
 
@@ -109,9 +111,6 @@ def edit(book_id):
             genres_list.append(genre)
         book.genres = genres_list
 
-        # book = Book(**params)
-        # book.prepare_to_save() 
-        # book.genres = genres_list
         try:
             db.session.add(book)
             db.session.commit()
@@ -159,5 +158,17 @@ def delete(book_id):
 def show(book_id):
     book = Book.query.get(book_id)
     book.prepare_to_html()
+
+    reviews = Review.query.filter_by(book_id=book_id)
+    user_review = None
+    for review in reviews:
+        review = review.prepare_to_html()
+    if current_user.get_id():
+        user_review = reviews.filter_by(user_id = current_user.id).first()
+    reviews.all()
+
     return render_template('books/show.html',
-                           book=book)
+                           book=book,
+                           user_review = user_review,
+                           reviews = reviews)
+

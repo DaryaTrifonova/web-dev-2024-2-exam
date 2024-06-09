@@ -1,3 +1,4 @@
+
 {% macro book_form(action, genres, current_user, book) %}
 
 <div class="container">
@@ -58,9 +59,11 @@
                         rows="5">{{request.form.get('short_desc') or book.short_desc or ''}}</textarea>
                 </div>
 
+
             </div>
+            {% if action == 'create' %}
             <div class="col-md-6 d-flex flex-column">
-                {% if action == 'create' %}
+                
                 <div class="mb-3">
                     <label for="background_img">Обложка книги</label>
                     <input class="form-control" type="file" name="background_img" id="background_img">
@@ -69,17 +72,16 @@
                     <img src="#" class="img-fluid d-none" alt="">
                     <label for="background_img" class="btn btn-dark">Выбрать изображение</label>
                 </div>
-                {% elif action == 'edit' %}
+            </div>
+            {% elif action == 'edit' %}
+            <div class="col-md-6 d-flex flex-column">
                 <div class="mb-3 background-preview p-3 rounded d-flex align-items-center justify-content-center">
                     <img src="{{ url_for('image', image_id=book.image_id) }}" alt="Обложка книги" class="img-fluid" >
                 </div>
-                {% endif %}
+            </div>
+            {% endif %}
             </div>
             
-            
-           
-                
-
         </div>
 
         <div class="mb-3 text-center">
@@ -87,4 +89,7 @@
         </div>
     </form>
 </div>
+
+
 {% endmacro %}
+
