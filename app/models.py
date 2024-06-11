@@ -180,3 +180,35 @@ class Review(db.Model):
     @property
     def rating_name(self):
         return self.rating.name
+    
+
+class AllBookVisits(db.Model):
+    __tablename__ = 'all_book_visits'
+
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey("books.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    book = db.relationship('Book')
+    user = db.relationship('User')
+
+    def __repr__(self):
+        return '<Visit %r>' % self.id
+    
+
+#Нужна для сортировки по пользователю и избегания дублирования идентификаторов пользователей
+class LastBookVisits(db.Model):
+    __tablename__ = 'last_book_visits'
+
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey("books.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    book = db.relationship('Book')
+    user = db.relationship('User')
+
+    def __repr__(self):
+        return '<Visit %r>' % self.id
+

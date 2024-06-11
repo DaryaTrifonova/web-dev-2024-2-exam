@@ -93,3 +93,91 @@
 
 {% endmacro %}
 
+
+
+
+{% macro all_books_form(books, current_user) %}
+<table class="table">
+    <tr>
+        <th>Обложка книги</th>
+        <th>Название</th>
+        <th>Жанр(ы)</th>
+        <th>Год</th>
+        <th>Рейтинг</th>
+        <th>Количество рецензий</th>
+        <th>Действия</th>
+    </tr>
+    {% for book in books %}
+    <tr>
+        <td style="background-image: url({{ url_for('image', image_id=book.image_id) }});vertical-align: middle; background-size: contain; background-repeat: no-repeat; background-position: center; height: 150px;"> </td>
+        <td style="vertical-align: middle;"> {{ book.name }}</td>
+        <td style="vertical-align: middle;"> 
+            {% for genre in book.genres %}
+            {{ genre.name }}
+            {% endfor %}
+        </td>
+        <td style="vertical-align: middle;"> {{ book.year_release }}</td>
+        <td style="vertical-align: middle;"> <span>★</span> <span>{{ "%.2f" | format(book.rating) }}</span> </td>
+        <td style="vertical-align: middle;"> {{ book.rating_num }} </td>
+        <td style="vertical-align: middle;">
+            <div class="btn-group" role="group">
+                <a class="btn btn-secondary" href="{{url_for('show', book_id=book.id)}}">Просмотр</a>
+                {% if current_user.is_authenticated %}
+                {% if current_user.can('edit') %}
+                <a class="btn btn-primary" href="{{url_for('edit', book_id = book.id)}}">Редактировать</a>
+                {% endif %}
+                {% if current_user.can('delete') %}
+                <button class="btn btn-danger" data-url="{{url_for('delete', book_id = book.id)}}" 
+                data-bs-toggle="modal" data-bs-target="#deleteBook">Удалить</button>
+
+                {% endif %}
+                {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endmacro %}
+
+{% macro popular_books_form(books, current_user) %}
+<table class="table text-center">
+    <tr>
+        <th>Обложка книги</th>
+        <th>Название</th>
+        <th>Жанр(ы)</th>
+        <th>Год</th>
+        <th>Рейтинг</th>
+        <th>Количество посещений за 3 месяца</th>
+        <th>Действия</th>
+    </tr>
+    {% for book in books %}
+    <tr>
+        <td style="background-image: url({{ url_for('image', image_id=book[0].image_id) }});vertical-align: middle; background-size: contain; background-repeat: no-repeat; background-position: center; height: 150px;"> </td>
+        <td style="vertical-align: middle;"> {{ book[0].name }}</td>
+        <td style="vertical-align: middle;"> 
+            {% for genre in book[0].genres %}
+            {{ genre.name }}
+            {% endfor %}
+        </td>
+        <td style="vertical-align: middle;"> {{ book[0].year_release }}</td>
+        <td style="vertical-align: middle;"> <span>★</span> <span>{{ "%.2f" | format(book[0].rating) }}</span> </td>
+        <td style="vertical-align: middle;"> {{ book[1] }} </td>
+        <td style="vertical-align: middle;">
+            <div class="btn-group" role="group">
+                <a class="btn btn-secondary" href="{{url_for('show', book_id=book[0].id)}}">Просмотр</a>
+                {% if current_user.is_authenticated %}
+                {% if current_user.can('edit') %}
+                <a class="btn btn-primary" href="{{url_for('edit', book_id = book[0].id)}}">Редактировать</a>
+                {% endif %}
+                {% if current_user.can('delete') %}
+                <button class="btn btn-danger" data-url="{{url_for('delete', book_id = book[0].id)}}" 
+                data-bs-toggle="modal" data-bs-target="#deleteBook">Удалить</button>
+
+                {% endif %}
+                {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endmacro %}
