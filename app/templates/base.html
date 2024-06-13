@@ -24,6 +24,10 @@
                     </a>
                 </div>
                     {% if current_user.is_authenticated %}
+                    {% if current_user.can('get_logs') %}
+                    <a class="text-white nav-link {% if 'visits' in request.endpoint %} active {% endif %}"
+                        href="{{ url_for('visits.users_visits') }}">Статистика</a>
+                    {% endif %}
                     <div class="dropdown d-flex me-5" style="width: 200px;">
                         <div class="profile ms-auto" title="sdfsdf" id="dropdownMenuButton" data-bs-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">

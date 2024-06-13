@@ -87,8 +87,8 @@ class Role(db.Model):
     
 books_genres = db.Table(
     "books_genres",
-    db.Column("book_id", db.Integer, db.ForeignKey("books.id")),
-    db.Column("genre_id", db.Integer, db.ForeignKey("genres.id")),
+    db.Column("book_id", db.Integer, db.ForeignKey("books.id", ondelete='CASCADE')),
+    db.Column("genre_id", db.Integer, db.ForeignKey("genres.id", ondelete='CASCADE')),
 )
 
 class Book(db.Model):
@@ -109,7 +109,7 @@ class Book(db.Model):
     genres = db.relationship(
         "Genre", secondary=books_genres, backref="books")
     image = db.relationship("Image")
-    reviews = db.relationship("Review")
+    reviews = db.relationship("Review", cascade="all, delete-orphan")
 
     def prepare_to_save(self):
         self.short_desc = bleach.clean(self.short_desc)
