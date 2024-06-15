@@ -35,11 +35,12 @@
             {% endif %}
 
         </div>
-
+        {% if top_books %}
         <div class="popular_books">
             <h2 class="title mb-5 font-weight-bold mt-5">Популярные книги</h2>
                 {{ popular_books_form(top_books, current_user) }}
         </div>
+        {% endif %}
         {% if last_books %}
         <div class="last_books">
             <h2 class="title mb-5 font-weight-bold mt-5">Последние просмотренные книги</h2>

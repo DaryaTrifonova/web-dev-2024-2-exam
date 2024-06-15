@@ -92,7 +92,6 @@ books_genres = db.Table(
 )
 
 class Book(db.Model):
-
     __tablename__ = "books"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -102,14 +101,13 @@ class Book(db.Model):
     publisher = db.Column(db.String(256), nullable=False)
     author = db.Column(db.String(256), nullable=False)
     pages_volume = db.Column(db.Integer, nullable=False)
-    image_id = db.Column(db.String(256), db.ForeignKey(
-        "images.id"), nullable=False)
+    image_id = db.Column(db.String(256), db.ForeignKey("images.id"), nullable=False)
     rating_sum = db.Column(db.Integer, nullable=False, default=0)
     rating_num = db.Column(db.Integer, nullable=False, default=0)
-    genres = db.relationship(
-        "Genre", secondary=books_genres, backref="books")
-    image = db.relationship("Image")
-    reviews = db.relationship("Review", cascade="all, delete-orphan")
+    genres = db.relationship("Genre", secondary=books_genres, backref="books")
+    image = db.relationship("Image", backref="bookss")
+    reviews = db.relationship("Review", backref="booksss")
+   
 
     def prepare_to_save(self):
         self.short_desc = bleach.clean(self.short_desc)
@@ -125,6 +123,7 @@ class Book(db.Model):
 
     def __repr__(self):
         return "<Book %r>" % self.name
+
     
 
 class Genre(db.Model):
@@ -197,7 +196,6 @@ class AllBookVisits(db.Model):
         return '<Visit %r>' % self.id
     
 
-#Нужна для сортировки по пользователю и избегания дублирования идентификаторов пользователей
 class LastBookVisits(db.Model):
     __tablename__ = 'last_book_visits'
 
@@ -206,9 +204,8 @@ class LastBookVisits(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    book = db.relationship('Book')
+    book = db.relationship('Book')  
     user = db.relationship('User')
 
     def __repr__(self):
         return '<Visit %r>' % self.id
-

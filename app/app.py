@@ -105,28 +105,31 @@ def new():
         if f and f.filename:
             img = ImageSaver(f).save()  # Сохранение изображения обложки книги
             params = extract_params(BOOKS_PARAMS)  # Извлечение параметров книги из формы
-            params['year_release'] = int(params['year_release'])  # Преобразование года выпуска в целое число
-            params['pages_volume'] = int(params['pages_volume'])  # Преобразование объема страниц в целое число
-            genres = request.form.getlist('genres')  # Получение списка выбранных жанров книги из формы
-            genres_list = []
-            for i in genres:
-                genre = Genre.query.filter_by(id=i).first()  # Получение объекта жанра по его идентификатору
-                if genre:
-                    genres_list.append(genre)
-                else:
-                    flash(f'Жанр с id {i} не найден', 'danger')  # Вывод сообщения об ошибке, если жанр не найден
+            if not params['year_release'].isdigit():
+                flash('Год должен быть числом', 'danger')
+            if not params['pages_volume'].isdigit():
+                flash('Объем страниц должен быть числом', 'danger')
+            else:
+                genres = request.form.getlist('genres')  # Получение списка выбранных жанров книги из формы
+                genres_list = []
+                for i in genres:
+                    genre = Genre.query.filter_by(id=i).first()  # Получение объекта жанра по его идентификатору
+                    if genre:
+                        genres_list.append(genre)
+                    else:
+                        flash(f'Жанр с id {i} не найден', 'danger')  # Вывод сообщения об ошибке, если жанр не найден
 
-            book = Book(**params, image_id=img.id)  # Создание новой книги с передачей параметров и изображения
-            book.prepare_to_save()  # Подготовка к сохранению книги
-            book.genres = genres_list  # Привязка жанров к книге
-            try:
-                db.session.add(book)  # Добавление книги в сессию базы данных
-                db.session.commit()  # Применение изменений в базе данных
-                flash('Книга успешно добавлена', 'success')  # Вывод сообщения об успешном добавлении книги
-                return redirect(url_for('show', book_id=book.id))  # Переадресация на страницу отображения информации о книге
-            except Exception as e:
-                db.session.rollback()  # Откат изменений в случае ошибки
-                flash(f'При сохранении данных возникла ошибка: {e}', 'danger')  # Вывод сообщения об ошибке сохранения
+                book = Book(**params, image_id=img.id)  # Создание новой книги с передачей параметров и изображения
+                book.prepare_to_save()  # Подготовка к сохранению книги
+                book.genres = genres_list  # Привязка жанров к книге
+                try:
+                    db.session.add(book)  # Добавление книги в сессию базы данных
+                    db.session.commit()  # Применение изменений в базе данных
+                    flash('Книга успешно добавлена', 'success')  # Вывод сообщения об успешном добавлении книги
+                    return redirect(url_for('show', book_id=book.id))  # Переадресация на страницу отображения информации о книге
+                except Exception as e:
+                    db.session.rollback()  # Откат изменений в случае ошибки
+                    flash(f'При сохранении данных возникла ошибка: {e}', 'danger')  # Вывод сообщения об ошибке сохранения
         else:
             flash('У книги должна быть обложка', 'danger')  # Вывод сообщения о необходимости обложки у книги
     
@@ -143,37 +146,38 @@ def edit(book_id):
     if request.method == "POST":
         # Извлечение параметров книги из формы редактирования
         params = extract_params(BOOKS_PARAMS)
-        params['year_release'] = int(params['year_release'])
-        params['pages_volume'] = int(params['pages_volume'])
         genres = request.form.getlist('genres')
         genres_list = []
 
         # Получение объекта книги по её идентификатору
         book = Book.query.get(book_id)
         # Обновление полей книги данными из формы
-        book.name = params['name']
-        book.author = params['author']
-        book.publisher = params['publisher']
-        book.year_release = params['year_release']
-        book.pages_volume = params['pages_volume']
-        book.short_desc = params['short_desc']
-
-        # Обновление жанров книги
-        for i in genres:
-            genre = Genre.query.filter_by(id=i).first()
-            genres_list.append(genre)
-        book.genres = genres_list
-
-        try:
-            # Сохранение обновленных данных книги в базе данных
-            db.session.add(book)
-            db.session.commit()
-            flash('Книга успешно отредактирована', 'success')
-            return redirect(url_for('show', book_id=book.id))  # Перенаправление на страницу просмотра книги
-        except Exception as e:
-            db.session.rollback()
-            flash(f'При сохранении данных возникла ошибка: {e}', 'danger')  # В случае ошибки выводим сообщение об ошибке
-    
+        if not params['year_release'].isdigit():
+            flash('Год должен быть числом', 'danger')
+        if not params['pages_volume'].isdigit():
+            flash('Объем страниц должен быть числом', 'danger')
+        else:
+            book.name = params['name']
+            book.author = params['author']
+            book.publisher = params['publisher']
+            book.year_release = params['year_release']
+            book.pages_volume = params['pages_volume']
+            book.short_desc = params['short_desc']
+            # Обновление жанров книги
+            for i in genres:
+                genre = Genre.query.filter_by(id=i).first()
+                genres_list.append(genre)
+            book.genres = genres_list
+            try:
+                # Сохранение обновленных данных книги в базе данных
+                db.session.add(book)
+                db.session.commit()
+                flash('Книга успешно отредактирована', 'success')
+                return redirect(url_for('show', book_id=book.id))  # Перенаправление на страницу просмотра книги
+            except Exception as e:
+                db.session.rollback()
+                flash(f'При сохранении данных возникла ошибка: {e}', 'danger')  # В случае ошибки выводим сообщение об ошибке
+        
     # Получение данных книги для отображения в форме редактирования
     book = Book.query.get(book_id)
     genres = Genre.query.all()
@@ -182,39 +186,39 @@ def edit(book_id):
                            genres=genres,
                            book=book)
 
-@app.route('/delete/<int:book_id>', methods=["POST"])
+@app.route('/<int:book_id>/delete', methods=['POST'])
 @login_required
 @check_rights('delete')
 def delete(book_id):
     book = Book.query.get(book_id)
-
-    # Подсчет количества книг с изображением, связанных с удаляемой книгой
-    books_with_img = len(Book.query.filter_by(image_id=book.image.id).all())
-
+    # Проверка зависимости у обложки
+    references = len(Book.query.filter_by(image_id=book.image.id).all())
+       
     try:
-        # Удаление всех записей о посещениях книги
+         # Удаление всех зависимостей
         for item in AllBookVisits.query.filter_by(book_id=book_id):
             db.session.delete(item)
         for item in LastBookVisits.query.filter_by(book_id=book_id):
             db.session.delete(item)
+        for item in Review.query.filter_by(book_id=book_id):
+            db.session.delete(item)
 
-        # Удаление самой книги
         db.session.delete(book)
-
-        # Если у книги единственное изображение, удаляем и изображение
-        if books_with_img == 1:
+        # Если зависимость единственная, то обложку можно удалить
+        if references == 1:
             image = Image.query.get(book.image.id)
-            delete_path = os.path.join(app.config['UPLOAD_FOLDER'], image.file_name)
+            delete_path = os.path.join(
+                app.config['UPLOAD_FOLDER'],
+                image.file_name)
             db.session.delete(image)
             os.remove(delete_path)
-
         db.session.commit()
-        flash('Удаление книги прошло успешно', 'success')  # Вывод сообщения об успешном удалении
+        flash('Удаление книги прошло успешно', 'success')
     except:
         db.session.rollback()
-        flash('Во время удаления книги произошла ошибка', 'danger')  # Вывод сообщения об ошибке при удалении
+        flash('Во время удаления книги произошла ошибка', 'danger')
 
-    return redirect(url_for('index'))  # Перенаправление на главную страницу после удаления
+    return redirect(url_for('index'))
 
 
 @app.route('/<int:book_id>')
